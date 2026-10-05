@@ -15,7 +15,7 @@ function renderItem(x) {
   const image = x.image_url || x.photo || '';
   const imageHtml = image ? `<img src="${escapeHtml(image)}" alt="${name}" style="width:100%;height:180px;object-fit:cover;border-radius:15px" loading="lazy">` : '🍰';
   const orderText = encodeURIComponent(`Hello Vishweshwara Bakery, I want to order ${x.name || 'this item'}${x.price ? ' - ' + x.price : ''}`);
-  return `<article class="card"><div class="product-icon">${imageHtml}</div><div><span class="tag">TODAY</span><h3>${name}</h3><p>${description}</p><strong>${price}</strong></div><a target="_blank" rel="noopener" href="https://wa.me/918340816801?text=${orderText}">Order →</a></article>`;
+  return `<article class="card"><div class="product-icon">${imageHtml}</div><div><span class="tag">TODAY</span><h3>${name}</h3><p>${description}</p><strong>${price}</strong></div><a target="_blank" rel="noopener" href="https://wa.me/917288969330?text=${orderText}">Order →</a></article>`;
 }
 async function renderToday() {
   const box = document.getElementById('todayMenu');
@@ -30,7 +30,7 @@ async function renderToday() {
   } else {
     try { items = JSON.parse(localStorage.getItem(menuKey) || '[]').filter(x => !x.menu_date || x.menu_date === today); } catch(e) {}
   }
-  box.innerHTML = items.length ? items.map(renderItem).join('') : '<article class="card" style="grid-column:1/-1;text-align:center"><div class="product-icon">🎂</div><h3>Today’s menu is being prepared</h3><p>Call or WhatsApp us for today’s fresh cakes, pastries and puffs.</p><a target="_blank" rel="noopener" href="https://wa.me/918340816801?text=Hello%20Vishweshwara%20Bakery%2C%20please%20share%20today%27s%20menu.">Ask on WhatsApp →</a></article>';
+  box.innerHTML = items.length ? items.map(renderItem).join('') : '<article class="card" style="grid-column:1/-1;text-align:center"><div class="product-icon">🎂</div><h3>Today’s menu is being prepared</h3><p>Call or WhatsApp us for today’s fresh cakes, pastries and puffs.</p><a target="_blank" rel="noopener" href="https://wa.me/917288969330?text=Hello%20Vishweshwara%20Bakery%2C%20please%20share%20today%27s%20menu.">Ask on WhatsApp →</a></article>';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
