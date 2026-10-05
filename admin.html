@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Owner Admin | Vishweshwara Bakery</title><link rel="stylesheet" href="style.css">
+<style>
+.admin{max-width:1000px;margin:45px auto;padding:0 20px}.panel{background:#fffdf9;border:1px solid #eadfd4;border-radius:22px;padding:28px;margin:20px 0;box-shadow:0 10px 30px #4424170f}
+form{display:grid;grid-template-columns:1fr 1fr;gap:14px}input,textarea{width:100%;padding:13px;border:1px solid #dbc9bb;border-radius:12px;font:inherit;background:#fff}.full{grid-column:1/-1}button{cursor:pointer}.status{margin:12px 0;padding:12px;border-radius:12px;background:#f5e8dd}.item{display:grid;grid-template-columns:90px 1fr auto;gap:15px;align-items:center;border-top:1px solid #eee1d7;padding:15px 0}.item img{width:90px;height:70px;object-fit:cover;border-radius:12px}.danger{padding:9px 13px;border:0;border-radius:999px;background:#f2dfd1;color:#7b2e20;font-weight:700}.hint{color:#806d63;line-height:1.6;font-size:13px}@media(max-width:650px){form{grid-template-columns:1fr}.full{grid-column:auto}.item{grid-template-columns:70px 1fr}.item img{width:70px;height:60px}.item .danger{grid-column:2;justify-self:start}}
+</style></head>
+<body>
+<header class="nav"><a class="logo" href="index.html"><span>VB</span> Vishweshwara Bakery</a><a class="nav-order" href="index.html">View Website</a></header>
+<main class="admin">
+<p class="eyebrow">OWNER DASHBOARD</p><h1 style="font-family:'Playfair Display';font-size:46px;margin:0">Daily Menu</h1>
+<p class="hint">Upload today's photos from your phone. Customers will see the published menu on the main website.</p>
+<section class="panel" id="loginPanel"><h2>Owner Login</h2><form id="loginForm"><input id="email" type="email" placeholder="Owner email" required><input id="password" type="password" placeholder="Password" required><button class="btn primary full">Login</button></form><div id="loginStatus" class="status"></div></section>
+<section class="panel" id="menuPanel" style="display:none"><h2>Add today's item</h2><form id="menuForm"><input id="name" placeholder="Item name" required><input id="price" placeholder="Price e.g. ₹500"><input id="description" class="full" placeholder="Short description"><input id="photo" class="full" type="file" accept="image/*" required><button class="btn primary full">Upload & Publish</button></form><div id="uploadStatus" class="status"></div><h2 style="margin-top:35px">Today's published items</h2><div id="items"></div><button id="logout" class="danger">Logout</button></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script>
+<script>
+const ready=window.SUPABASE_URL && !window.SUPABASE_URL.startsWith("PASTE_");
+let sb=ready?supabase.createClient(window.SUPABASE_URL,window.SUPABASE_KEY):null;
+const status=(id,msg)=>document.getElementById(id).textContent=msg;
+async function loadItems(){if(!sb)return;const {data,error}=await sb.from('menu_items').select('*').eq('menu_date',new Date().toISOString().slice(0,10)).order('created_at',{ascending:false});if(error){status('uploadStatus',error.message);return}document.getElementById('items').innerHTML=data.length?data.map(x=>`<div class="item"><img src="${x.image_url||''}"><div><strong>${x.name}</strong><br>${x.price||''}<br><small>${x.description||''}</small></div><button class="danger" onclick="removeItem('${x.id}','${x.image_path||''}')">Delete</button></div>`).join(''):'<p class="hint">No items published today.</p>'}
+document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();if(!sb){status('loginStatus','First add your Supabase URL and publishable/anon key to supabase-config.js.');return}const {error}=await sb.auth.signInWithPassword({email:email.value,password:password.value});if(error)status('loginStatus',error.message);else{document.getElementById('loginPanel').style.display='none';document.getElementById('menuPanel').style.display='block';loadItems()}};
+document.getElementById('menuForm').onsubmit=async e=>{e.preventDefault();const f=photo.files[0];if(!f)return;if(f.size>6*1024*1024){status('uploadStatus','Please use a photo below 6 MB.');return}status('uploadStatus','Uploading photo...');const safe=f.name.toLowerCase().replace(/[^a-z0-9.-]/g,'-');const path=new Date().toISOString().replace(/[:.]/g,'-')+'-'+crypto.randomUUID()+'-'+safe;const up=await sb.storage.from('menu-photos').upload(path,f,{contentType:f.type,upsert:false});if(up.error){status('uploadStatus',up.error.message);return}const url=sb.storage.from('menu-photos').getPublicUrl(path).data.publicUrl;const ins=await sb.from('menu_items').insert({name:name.value.trim(),price:price.value.trim(),description:description.value.trim(),image_path:path,image_url:url});if(ins.error){await sb.storage.from('menu-photos').remove([path]);status('uploadStatus',ins.error.message);return}e.target.reset();status('uploadStatus','Published successfully.');loadItems()};
+async function removeItem(id,path){if(!confirm('Delete this item?'))return;const d=await sb.from('menu_items').delete().eq('id',id);if(d.error){alert(d.error.message);return}if(path)await sb.storage.from('menu-photos').remove([path]);loadItems()}
+document.getElementById('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
+if(!ready)status('loginStatus','Setup needed: open supabase-config.js and add your project URL + browser-safe publishable/anon key.');
+</script></body></html>
